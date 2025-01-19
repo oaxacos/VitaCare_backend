@@ -1,0 +1,38 @@
+name: Merge Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read        # Permite leer el contenido del repositorio
+  pull-requests: write  # Permite escribir y modificar pull requests
+  issues: write         # Permite interactuar con issues (comentarios, crear, etc.)
+  actions: read         # Permite leer el estado de las acciones de GitHub
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: stable
+
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: /tmp/go-build
+          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-mod-
+
+      - name: Format code
+        run: make fmt
+
+      - name: Run tests
+        run: make test

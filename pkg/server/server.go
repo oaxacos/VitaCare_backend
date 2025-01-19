@@ -5,6 +5,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/pkg/logger"
+	"github.com/oaxacos/vitacare/pkg/response"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -16,13 +17,25 @@ type Server struct {
 }
 
 func handleHealthcheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("ok"))
+	response.RenderJson(w, map[string]string{
+		"status": "ok",
+	}, http.StatusOK)
+}
+
+func handleNotFound(w http.ResponseWriter, r *http.Request) {
+	response.RenderNotFound(w)
+}
+
+func handleMethodNotAllowed(w http.ResponseWriter, r *http.Request) {
+	response.RenderNotFound(w)
 }
 
 func NewServer() *Server {
 	logs := logger.GetGlobalLogger()
 	r := chi.NewRouter()
 	r.Use(loggerMiddleware(logs))
+	r.NotFound(handleNotFound)
+	r.MethodNotAllowed(handleMethodNotAllowed)
 	r.Get("/v0/api/healthcheck", handleHealthcheck)
 
 	return &Server{

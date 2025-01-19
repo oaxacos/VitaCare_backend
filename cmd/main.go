@@ -8,6 +8,7 @@ import (
 
 func main() {
 	logs := logger.GetGlobalLogger()
+	defer logger.CloseLogger()
 
 	conf, err := config.NewConfig()
 	if err != nil {

@@ -3,7 +3,8 @@
   "packages": [
     "go@latest",
     "gopls@0.17.1",
-    "air@latest"
+    "air@latest",
+    "dbmate@latest"
   ],
   "shell": {
     "init_hook": [

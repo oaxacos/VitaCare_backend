@@ -1,0 +1,7 @@
+[dev]
+cmd = "go run cmd/main.go"
+bin = "tmp/main"
+
+
+[watcher]
+ignore = ["assets/*", "docs/*"]

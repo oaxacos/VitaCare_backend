@@ -36,7 +36,7 @@ func NewServer() *Server {
 	r.Use(loggerMiddleware(logs))
 	r.NotFound(handleNotFound)
 	r.MethodNotAllowed(handleMethodNotAllowed)
-	r.Get("/v0/api/healthcheck", handleHealthcheck)
+	r.Get("/api/v0/healthcheck", handleHealthcheck)
 
 	return &Server{
 		r,

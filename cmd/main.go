@@ -7,9 +7,10 @@ import (
 
 func main() {
 	logs := logger.GetGlobalLogger()
-	conf, err := config.NewConfig()
+
+	_, err := config.NewConfig()
 	if err != nil {
-		logs.Fatalf(err.Error())
+		logs.Error(err)
 	}
-	logs.Infof("Starting server on %d", conf.Server.Port)
+
 }

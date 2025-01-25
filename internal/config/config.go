@@ -7,13 +7,17 @@ import (
 	"github.com/knadh/koanf/v2"
 )
 
-type server struct {
+type Server struct {
 	Port   int  `koanf:"port"`
 	Debug  bool `koanf:"debug"`
 	Pretty bool `koanf:"pretty"`
 }
 
-type database struct {
+type Cors struct {
+	TrustedOrigins []string `koanf:"trusted-origins"`
+}
+
+type Database struct {
 	DbName   string `koanf:"dbname"`
 	Host     string `koanf:"host"`
 	Port     int    `koanf:"port"`
@@ -25,8 +29,9 @@ var k = koanf.New(".")
 var configFilePath = "config/config.yaml"
 
 type Config struct {
-	Server   server   `koanf:"server"`
-	Database database `koanf:"database"`
+	Server   Server   `koanf:"Server"`
+	Database Database `koanf:"Database"`
+	Cors     Cors     `koanf:"Cors"`
 }
 
 var errConfigEmpty = errors.New("config file is empty")

@@ -14,8 +14,8 @@ func main() {
 	if err != nil {
 		logs.Error(err)
 	}
-	s := server.NewServer()
-	err = s.Start(conf)
+	s := server.NewServer(conf)
+	err = s.Start()
 	if err != nil {
 		logs.Error(err)
 	}

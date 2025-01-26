@@ -2,14 +2,25 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/oaxacos/vitacare/internal/config"
+	"github.com/stretchr/testify/assert"
 )
 
+var conf = &config.Config{
+	Server: config.Server{
+		Port:   8080,
+		Debug:  true,
+		Pretty: true,
+	},
+}
+
 func TestServer(t *testing.T) {
-	s := NewServer()
+
+	s := NewServer(conf)
 	var okMessage = map[string]string{
 		"status": "ok",
 	}
@@ -28,7 +39,7 @@ func TestServer(t *testing.T) {
 }
 
 func TestServerNotFound(t *testing.T) {
-	s := NewServer()
+	s := NewServer(conf)
 	var notFound = map[string]string{
 		"error": "page not found",
 	}

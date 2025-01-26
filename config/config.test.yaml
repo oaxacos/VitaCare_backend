@@ -1,0 +1,20 @@
+server:
+  port: 8000
+  debug: true
+  pretty: true
+
+database:
+  dbname: vitacare_test
+  host: localhost
+  port: 5432
+  password: postgres
+  username: postgres
+
+cors:
+  trusted-origins:
+    - http://localhost:3000
+
+token:
+  access-token-key: "access-token-key"
+  access-time-expiration: 15
+  refresh-time-expiration: 2

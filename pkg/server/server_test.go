@@ -2,11 +2,11 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/oaxacos/vitacare/internal/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/stretchr/testify/assert"
 )
 

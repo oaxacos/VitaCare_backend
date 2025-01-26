@@ -55,13 +55,13 @@ db-up: db-create migrate-up
 
 ## db-drop: drop the database
 .PHONY: db-drop
-db-drop:
+db-drop: migrate-down
 	dbmate --url ${DSN} drop
 
 ## migrate-up: apply the migrations
 .PHONY: migrate-up
 migrate-up:
-	dbmate --url ${DSN} --schema-file ${DB_MIGRATIONS_PATH} up
+	dbmate --url ${DSN} --migrations-dir ${DB_MIGRATIONS_PATH} up
 
 ## migrate-down: rollback the migrations
 .PHONY: migrate-down

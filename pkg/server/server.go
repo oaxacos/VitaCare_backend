@@ -36,6 +36,7 @@ func NewServer(conf *config.Config) *Server {
 	r := chi.NewRouter()
 	r.Use(loggerMiddleware(logs))
 	r.Use(enableCors(conf))
+
 	r.Get("/api/v0/healthcheck", handleHealthcheck)
 
 	r.NotFound(handleNotFound)
@@ -54,18 +55,12 @@ func (s *Server) Start() error {
 		port = s.Port
 	}
 	logs.Infof("start server on %s", port)
-	return http.ListenAndServe(port, s)
+	return http.ListenAndServe(port, s.Mux)
 }
 
 func loggerMiddleware(log *zap.SugaredLogger) func(handler http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Debug("request url: ", r.URL)
-			log.Info(
-				"method: ", r.Method,
-				"	",
-				"path: ", r.URL.Path,
-			)
 			ctx := logger.SetContextLogger(r.Context(), log)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

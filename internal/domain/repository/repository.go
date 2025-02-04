@@ -14,3 +14,10 @@ type RefreshTokenRepository interface {
 	GetByToken(ctx context.Context, token string) (*model.RefreshToken, error)
 	Update(ctx context.Context, token *model.RefreshToken) error
 }
+
+type UserRepository interface {
+	Save(ctx context.Context, user *model.User) error
+	GetByID(ctx context.Context, id string) (*model.User, error)
+	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	AlreadyExist(ctx context.Context, email string) error
+}

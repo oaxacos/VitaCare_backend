@@ -21,7 +21,7 @@ CREATE TABLE "users" (
   "birthdate" timestamptz,
   "phone" text,
   "is_active" bool DEFAULT true,
-  "deceased_at" timestamptz,
+  "deceased_at" timestamptz DEFAULT null,
   "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP,
   "update_at" timestamptz DEFAULT CURRENT_TIMESTAMP
 );

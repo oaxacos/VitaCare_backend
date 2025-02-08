@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+
 	"github.com/oaxacos/vitacare/internal/domain/model"
 	"github.com/oaxacos/vitacare/internal/domain/repository"
 	"github.com/oaxacos/vitacare/pkg/logger"
@@ -26,6 +27,7 @@ func (u *UserService) CreateUser(ctx context.Context, user *model.User) error {
 	}
 
 	err = u.UserRepo.Save(ctx, user)
+
 	if err != nil {
 		log.Error(err)
 		return err

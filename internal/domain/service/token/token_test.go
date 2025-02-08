@@ -3,12 +3,14 @@ package token
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/config"
+	"github.com/oaxacos/vitacare/internal/domain/model"
 	repository "github.com/oaxacos/vitacare/internal/domain/repository/token"
 	"github.com/oaxacos/vitacare/internal/infrastructure/db"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewTokenService(t *testing.T) {
@@ -21,10 +23,10 @@ func TestNewTokenService(t *testing.T) {
 
 	tokenService := NewTokenService(conf, repo)
 
-	userTest := DommyUser{
+	userTest := &model.User{
 		ID:    uuid.MustParse("f3b27c73-c844-476e-917f-56278406579f"),
 		Email: "test@test.com",
-		Role:  "admin",
+		Rol:  "admin",
 	}
 	ctx := context.Background()
 

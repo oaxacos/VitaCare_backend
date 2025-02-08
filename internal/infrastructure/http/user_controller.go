@@ -1,39 +1,51 @@
 package http
 
 import (
+	"net/http"
+
+	"github.com/oaxacos/vitacare/internal/domain/service/token"
+	"github.com/oaxacos/vitacare/internal/domain/service/user"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/oaxacos/vitacare/internal/application/dto"
 	"github.com/oaxacos/vitacare/internal/domain/model"
-	"github.com/oaxacos/vitacare/internal/domain/service/user"
+	"github.com/oaxacos/vitacare/pkg/logger"
 	"github.com/oaxacos/vitacare/pkg/response"
 	"github.com/oaxacos/vitacare/pkg/utils"
 	"github.com/oaxacos/vitacare/pkg/validator"
-	"net/http"
 )
 
 type UserController struct {
-	userService *user.UserService
-	c           *chi.Mux
+	userService  *user.UserService
+	tokenService *token.TokenService
+	c            *chi.Mux
 }
 
 const prefix = "/api/v0"
 
-func NewUserController(c *chi.Mux, userSvc *user.UserService) {
+func NewUserController(c *chi.Mux, userSvc *user.UserService, tokenSvc *token.TokenService) {
 	userController := &UserController{
-		c:           c,
-		userService: userSvc,
+		c:            c,
+		userService:  userSvc,
+		tokenService: tokenSvc,
 	}
 	c.Route(prefix, func(r chi.Router) {
-		r.Post("/users", userController.handleCreateUser)
+		r.Post("/users/auth/register", userController.handleRegisterUser)
+		r.Post("/users/auth/login", userController.handleLogin)
 	})
 
 }
 
-func (u *UserController) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 	// create user
 	var userData dto.UserDto
 	err := utils.ReadFromRequest(r, &userData)
+	log := logger.GetContextLogger(r.Context())
 
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	validator.NewValidator()
 
 	if err != nil {
@@ -53,10 +65,49 @@ func (u *UserController) handleCreateUser(w http.ResponseWriter, r *http.Request
 		response.RenderError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	
-	err = response.WriteJsonResponse(w, userData, http.StatusOK)
+	log.Debug("User created successfully")
+	// create token
+	refreshToken, err := u.tokenService.GenerateRefreshToken(r.Context(), newUser)
 	if err != nil {
 		response.RenderError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	log.Debug("Refresh token created successfully")
+	accessToken, err := u.tokenService.GenerateAccessToken(r.Context(), newUser)
+	if err != nil {
+		response.RenderError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	dataRespose := dto.UserLoggedInDto{
+		AccessToken:  accessToken,
+		UserID:       newUser.ID.String(),
+		RefreshToken: refreshToken,
+	}
+
+	err = response.WriteJsonResponse(w, dataRespose, http.StatusOK)
+
+	if err != nil {
+		response.RenderError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+}
+
+func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
+	var loginData dto.UserLoginDto
+	err := utils.ReadFromRequest(r, &loginData)
+	log := logger.GetContextLogger(r.Context())
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	validator.NewValidator()
+	err = validator.Validate(loginData)
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+    log.Debug("Login data validated successfully")
+
+	response.WriteJsonResponse(w, loginData, http.StatusOK)
 }

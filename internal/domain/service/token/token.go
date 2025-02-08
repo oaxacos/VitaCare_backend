@@ -2,32 +2,26 @@ package token
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/internal/domain/model"
 	"github.com/oaxacos/vitacare/internal/domain/repository"
 	"github.com/oaxacos/vitacare/pkg/logger"
-	"math/rand"
-	"time"
 )
 
 type AccessTokenClaims struct {
 	UserID uuid.UUID `json:"user_id"`
 	Email  string    `json:"email"`
-	//TODO: add the correct role for users
-	Role string `json:"role"`
+	Rol model.UserRole `json:"role"`
 	jwt.RegisteredClaims
 }
 
-// TODO: change the user type to the correct user model
-type DommyUser struct {
-	ID    uuid.UUID
-	Email string
-	Role  string
-}
 
 var (
 	ErrInvalidToken = errors.New("invalid token")
@@ -51,12 +45,11 @@ func NewTokenService(conf *config.Config, repo repository.RefreshTokenRepository
 	}
 }
 
-// TODO: change the user type to the correct user model
-func (t *TokenService) GenerateAccessToken(ctx context.Context, user DommyUser) (string, error) {
+func (t *TokenService) GenerateAccessToken(ctx context.Context, user *model.User) (string, error) {
 	claims := AccessTokenClaims{
 		UserID: user.ID,
 		Email:  user.Email,
-		Role:   user.Role,
+		Rol:   user.Rol,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(t.accessExpirationTime)),
@@ -74,7 +67,7 @@ func (t *TokenService) GenerateAccessToken(ctx context.Context, user DommyUser) 
 	return tokenString, nil
 }
 
-func (t *TokenService) GenerateRefreshToken(ctx context.Context, user DommyUser) (string, error) {
+func (t *TokenService) GenerateRefreshToken(ctx context.Context, user *model.User) (string, error) {
 	logs := logger.GetContextLogger(ctx)
 
 	tokenString, err := t.generateRandomToken()

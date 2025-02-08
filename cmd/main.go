@@ -2,7 +2,9 @@ package main
 
 import (
 	"github.com/oaxacos/vitacare/internal/config"
-	"github.com/oaxacos/vitacare/internal/domain/repository/user"
+	tokenRepository "github.com/oaxacos/vitacare/internal/domain/repository/token"
+	userRepository "github.com/oaxacos/vitacare/internal/domain/repository/user"
+	"github.com/oaxacos/vitacare/internal/domain/service/token"
 	userService "github.com/oaxacos/vitacare/internal/domain/service/user"
 	"github.com/oaxacos/vitacare/internal/infrastructure/db"
 	"github.com/oaxacos/vitacare/internal/infrastructure/http"
@@ -24,13 +26,15 @@ func main() {
 		logs.Fatalf("failed to connect to database: %v", err)
 	}
 
-	userRepo := user.NewUserRepository(connection.DB)
+	userRepo := userRepository.NewUserRepository(connection.DB)
+	tokenRepo := tokenRepository.NewTokenRepository(connection.DB)
 
 	userSvc := userService.NewUserService(userRepo)
+	tokenSvc := token.NewTokenService(conf, tokenRepo)
 
 	s := server.NewServer(conf)
 
-	http.NewUserController(s.Mux, userSvc)
+	http.NewUserController(s.Mux, userSvc, tokenSvc)
 
 	err = s.Start()
 	if err != nil {

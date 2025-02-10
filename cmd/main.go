@@ -22,6 +22,11 @@ func main() {
 	}
 
 	connection, err := db.NewConnection(conf)
+    defer func ()  {
+        logs.Info("closing connection")
+        connection.Close()
+    }()
+
 	if err != nil {
 		logs.Fatalf("failed to connect to database: %v", err)
 	}
@@ -34,7 +39,7 @@ func main() {
 
 	s := server.NewServer(conf)
 
-	http.NewUserController(s.Mux, userSvc, tokenSvc)
+	http.NewUserController(s, userSvc, tokenSvc)
 
 	err = s.Start()
 	if err != nil {

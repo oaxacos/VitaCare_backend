@@ -30,7 +30,7 @@ func (u *UserRepo) Save(ctx context.Context, user *model.User) error {
 	return err
 }
 
-func (u *UserRepo) GetByID(ctx context.Context, id string) (*model.User, error) {
+func (u *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	user := new(model.User)
 
 	q := u.DB.NewSelect().Model(user).Where("id = ?", id)
@@ -46,6 +46,9 @@ func (u *UserRepo) GetByEmail(ctx context.Context, email string) (*model.User, e
 	q := u.DB.NewSelect().Model(user).Where("email = ?", email)
 	err := q.Scan(ctx)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("invalid credentials")
+		}
 		return nil, err
 	}
 	return user, nil
@@ -68,4 +71,44 @@ func (u *UserRepo) AlreadyExist(ctx context.Context, email string) error {
 	}
 
 	return nil
+}
+
+func (u *UserRepo) savePassword(ctx context.Context, password *model.Password) error {
+	q := u.DB.NewInsert().Model(password)
+	_, err := q.Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepo) Create(ctx context.Context, user *model.User) error {
+	tx, err := u.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	err = u.Save(ctx, user)
+	if err != nil {
+		return err
+	}
+	err = u.savePassword(ctx, user.Password)
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepo) GetPassword(ctx context.Context, user *model.User) (*model.Password, error) {
+	password := new(model.Password)
+	q := u.DB.NewSelect().Model(password).Where("user_id = ?", user.ID)
+	err := q.Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return password, nil
 }

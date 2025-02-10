@@ -1,8 +1,10 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -25,4 +27,12 @@ func NewConnection(conf *config.Config) (DB, error) {
 	return DB{
 		DB: db,
 	}, nil
+}
+
+func (d *DB) BeginTx(ctx context.Context) (*sql.Tx, error) {
+    return d.DB.DB.BeginTx(ctx, nil)
+}
+
+func (d *DB) Commit(tx *sql.Tx) error {
+    return tx.Commit()
 }

@@ -16,12 +16,11 @@ import (
 )
 
 type AccessTokenClaims struct {
-	UserID uuid.UUID `json:"user_id"`
-	Email  string    `json:"email"`
-	Rol model.UserRole `json:"role"`
+	UserID uuid.UUID      `json:"user_id"`
+	Email  string         `json:"email"`
+	Rol    model.UserRole `json:"role"`
 	jwt.RegisteredClaims
 }
-
 
 var (
 	ErrInvalidToken = errors.New("invalid token")
@@ -49,7 +48,7 @@ func (t *TokenService) GenerateAccessToken(ctx context.Context, user *model.User
 	claims := AccessTokenClaims{
 		UserID: user.ID,
 		Email:  user.Email,
-		Rol:   user.Rol,
+		Rol:    user.Rol,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(t.accessExpirationTime)),
@@ -85,7 +84,7 @@ func (t *TokenService) GenerateRefreshToken(ctx context.Context, user *model.Use
 	return tokenString, nil
 }
 
-func (t *TokenService) VerifyAccessToken(ctx context.Context, token string) (any, error) {
+func (t *TokenService) VerifyAccessToken(ctx context.Context, token string) (*AccessTokenClaims, error) {
 	return t.validateToken(ctx, token, string(t.accessTokenKey))
 }
 
@@ -139,4 +138,28 @@ func (t *TokenService) generateRandomToken() (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+func (t *TokenService) RenewTokens(ctx context.Context, user *model.User) (string, string, error) {
+	log := logger.GetContextLogger(ctx)
+	beforeToken, err := t.repo.GetByUserID(ctx, user.ID)
+	if err != nil {
+		log.Error(err)
+		return "", "", err
+	}
+	if beforeToken != nil {
+		err = t.repo.Delete(ctx, beforeToken.ID)
+		if err != nil {
+			return "", "", err
+		}
+	}
+	accessToken, err := t.GenerateAccessToken(ctx, user)
+	if err != nil {
+		return "", "", err
+	}
+	refreshToken, err := t.GenerateRefreshToken(ctx, user)
+	if err != nil {
+		return "", "", err
+	}
+	return accessToken, refreshToken, nil
 }

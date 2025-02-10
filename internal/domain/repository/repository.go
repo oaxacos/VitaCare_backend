@@ -17,7 +17,9 @@ type RefreshTokenRepository interface {
 
 type UserRepository interface {
 	Save(ctx context.Context, user *model.User) error
-	GetByID(ctx context.Context, id string) (*model.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	AlreadyExist(ctx context.Context, email string) error
+	Create(ctx context.Context, user *model.User) error
+	GetPassword(ctx context.Context, user *model.User) (*model.Password, error)
 }

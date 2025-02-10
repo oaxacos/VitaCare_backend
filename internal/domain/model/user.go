@@ -31,10 +31,11 @@ type User struct {
 	DeceasedAt    sql.NullTime `bun:"deceased_at"`
 	CreatedAt     time.Time    `bun:"created_at"`
 	UpdateAt      time.Time    `bun:"update_at"`
+	Password      *Password    `bun:"rel:has-one,join:id=user_id"`
 }
 
 func NewPatientUser(dto dto.UserDto) *User {
-	return &User{
+	user := &User{
 		ID:        uuid.New(),
 		Email:     dto.Email,
 		FirstName: dto.FirstName,
@@ -44,4 +45,9 @@ func NewPatientUser(dto dto.UserDto) *User {
 		CreatedAt: time.Now(),
 		UpdateAt:  time.Now(),
 	}
+	password := NewPassword(dto.Password, user.ID)
+	_ = password.SetHash()
+	user.Password = password
+
+	return user
 }

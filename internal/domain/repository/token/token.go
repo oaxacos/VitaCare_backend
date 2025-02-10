@@ -31,8 +31,10 @@ func (t *RefreshTokenRepo) Delete(ctx context.Context, token uuid.UUID) error {
 }
 
 func (t *RefreshTokenRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*model.RefreshToken, error) {
-	var token *model.RefreshToken
-	err := t.DB.NewSelect().Model(token).Where("user_id = ?", userID).Scan(ctx)
+	token := new(model.RefreshToken)
+	q := t.DB.NewSelect().Model(token).Where("user_id = ?", userID)
+	logger.GetContextLogger(ctx).Debugf("query: %s", q.String())
+	err := q.Scan(ctx)
 	if err != nil {
 		return nil, err
 	}

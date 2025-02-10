@@ -17,7 +17,7 @@ CREATE TABLE "users" (
   "first_name" text,
   "last_name" text,
   "rol" rol DEFAULT 'patient',
-  "dni" text UNIQUE NOT NULL,
+  "dni" text,
   "birthdate" timestamptz,
   "phone" text,
   "is_active" bool DEFAULT true,

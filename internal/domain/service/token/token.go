@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,6 +14,7 @@ import (
 	"github.com/oaxacos/vitacare/internal/domain/model"
 	"github.com/oaxacos/vitacare/internal/domain/repository"
 	"github.com/oaxacos/vitacare/pkg/logger"
+	"github.com/oaxacos/vitacare/pkg/utils"
 )
 
 type AccessTokenClaims struct {
@@ -45,25 +47,8 @@ func NewTokenService(conf *config.Config, repo repository.RefreshTokenRepository
 }
 
 func (t *TokenService) GenerateAccessToken(ctx context.Context, user *model.User) (string, error) {
-	claims := AccessTokenClaims{
-		UserID: user.ID,
-		Email:  user.Email,
-		Rol:    user.Rol,
-		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(t.accessExpirationTime)),
-		},
-	}
-
-	logs := logger.GetContextLogger(ctx)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(t.accessTokenKey)
-	if err != nil {
-		logs.Error(err)
-		return "", err
-	}
-
-	return tokenString, nil
+    fmt.Println("GenerateAccessToken")
+	return utils.GenerateAccessToken(user, t.accessExpirationTime, t.accessTokenKey)
 }
 
 func (t *TokenService) GenerateRefreshToken(ctx context.Context, user *model.User) (string, error) {

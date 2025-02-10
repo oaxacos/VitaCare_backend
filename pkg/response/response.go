@@ -55,3 +55,39 @@ func RenderBadRequest(w http.ResponseWriter) {
 	message := "bad request"
 	RenderError(w, http.StatusBadRequest, message)
 }
+
+func RenderUnauthorized(w http.ResponseWriter) {
+	message := "unauthorized"
+	RenderError(w, http.StatusUnauthorized, message)
+}
+
+type Cookie struct {
+	Name     string
+	Value    string
+	MaxAge   int
+	HttpOnly bool
+	Secure   bool
+	SameSite http.SameSite
+}
+
+func SetCookie(w http.ResponseWriter, cookie *http.Cookie) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     cookie.Name,
+		Value:    cookie.Value,
+		MaxAge:   cookie.MaxAge,
+		HttpOnly: cookie.HttpOnly,
+		Secure:   cookie.Secure,
+		SameSite: cookie.SameSite,
+	})
+}
+
+func DeleteCookie(w http.ResponseWriter, name string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    "",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	})
+}

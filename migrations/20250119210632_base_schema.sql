@@ -17,11 +17,19 @@ CREATE TABLE "users" (
   "first_name" text,
   "last_name" text,
   "rol" rol DEFAULT 'patient',
-  "dni" text UNIQUE NOT NULL,
+  "dni" text,
   "birthdate" timestamptz,
   "phone" text,
   "is_active" bool DEFAULT true,
-  "deceased_at" timestamptz,
+  "deceased_at" timestamptz DEFAULT null,
+  "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP,
+  "update_at" timestamptz DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_passwords (
+  "id" uuid PRIMARY KEY,
+  "user_id" uuid,
+  "password" bytea NOT NULL,
   "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP,
   "update_at" timestamptz DEFAULT CURRENT_TIMESTAMP
 );
@@ -118,9 +126,14 @@ CREATE TABLE "medical_appointments" (
   "update_at" timestamptz DEFAULT CURRENT_TIMESTAMP
 );
 
+-- create index
+CREATE INDEX "users_email_index" ON "users" ("email");
+CREATE INDEX "user_passwords_user_id_index" ON "user_passwords" ("user_id");
+
 
 -- migrate:down
 DROP TABLE IF EXISTS "users" cascade;
+DROP TABLE IF EXISTS "user_passwords" cascade;
 DROP TYPE IF EXISTS "rol";
 DROP TABLE IF EXISTS "address";
 DROP TABLE IF EXISTS "medical_ensure";

@@ -1,20 +1,20 @@
 package server
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/pkg/logger"
 	"github.com/oaxacos/vitacare/pkg/response"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 )
 
 var defaultPort = ":8080"
 
 type Server struct {
 	*chi.Mux
-	Port string
+	Config *config.Config
 }
 
 func handleHealthcheck(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +36,7 @@ func NewServer(conf *config.Config) *Server {
 	r := chi.NewRouter()
 	r.Use(loggerMiddleware(logs))
 	r.Use(enableCors(conf))
+
 	r.Get("/api/v0/healthcheck", handleHealthcheck)
 
 	r.NotFound(handleNotFound)
@@ -43,29 +44,24 @@ func NewServer(conf *config.Config) *Server {
 
 	return &Server{
 		r,
-		fmt.Sprintf(":%d", conf.Server.Port),
+		conf,
 	}
 }
 
 func (s *Server) Start() error {
 	logs := logger.GetGlobalLogger()
 	port := defaultPort
-	if s.Port != "" {
-		port = s.Port
+	portStr := strconv.Itoa(s.Config.Server.Port)
+	if portStr != "" {
+		port = ":" + portStr
 	}
 	logs.Infof("start server on %s", port)
-	return http.ListenAndServe(port, s)
+	return http.ListenAndServe(port, s.Mux)
 }
 
 func loggerMiddleware(log *zap.SugaredLogger) func(handler http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Debug("request url: ", r.URL)
-			log.Info(
-				"method: ", r.Method,
-				"	",
-				"path: ", r.URL.Path,
-			)
 			ctx := logger.SetContextLogger(r.Context(), log)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

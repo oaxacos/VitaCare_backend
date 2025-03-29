@@ -45,7 +45,7 @@ func NewPatientUser(dto dto.UserDto) *User {
 		CreatedAt: time.Now(),
 		UpdateAt:  time.Now(),
 	}
-	password := NewPassword(dto.Password, user.ID)
+	password := NewPassword(user.ID, dto.Password)
 	_ = password.SetHash()
 	user.Password = password
 

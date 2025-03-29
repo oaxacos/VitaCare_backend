@@ -1,7 +1,9 @@
 package response
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/oaxacos/vitacare/pkg/logger"
 	"net/http"
 )
@@ -54,6 +56,14 @@ func RenderNotFound(w http.ResponseWriter) {
 func RenderBadRequest(w http.ResponseWriter) {
 	message := "bad request"
 	RenderError(w, http.StatusBadRequest, message)
+}
+
+func RenderFatalError(w http.ResponseWriter, err error) {
+	if errors.Is(err, sql.ErrNoRows) {
+		RenderServerError(w, err)
+	} else {
+		RenderError(w, http.StatusInternalServerError, err.Error())
+	}
 }
 
 func RenderUnauthorized(w http.ResponseWriter) {

@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-
 	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/domain/model"
+	"github.com/uptrace/bun"
 )
 
 type RefreshTokenRepository interface {
@@ -16,10 +16,13 @@ type RefreshTokenRepository interface {
 }
 
 type UserRepository interface {
-	Save(ctx context.Context, user *model.User) error
+	Save(ctx context.Context, tx *bun.Tx, user *model.User) error
 	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
-	AlreadyExist(ctx context.Context, email string) error
-	Create(ctx context.Context, user *model.User) error
-	GetPassword(ctx context.Context, user *model.User) (*model.Password, error)
+	WithTransaction(ctx context.Context, fn func(tx *bun.Tx) error) error
+}
+
+type PasswordRepository interface {
+	VerifyPasswordText(ctx context.Context, userId uuid.UUID, plainText string) error
+	Save(ctx context.Context, tx *bun.Tx, password *model.Password) error
 }

@@ -18,10 +18,8 @@ func NewTokenRepository(db *bun.DB) *RefreshTokenRepo {
 	}
 }
 
-func (t *RefreshTokenRepo) Save(ctx context.Context, token *model.RefreshToken) error {
-	q := t.DB.NewInsert().Model(token)
-	logger.GetContextLogger(ctx).Debugf("query: %s", q.String())
-	_, err := q.Exec(ctx)
+func (t *RefreshTokenRepo) Save(ctx context.Context, tx *bun.Tx, token *model.RefreshToken) error {
+	_, err := tx.NewInsert().Model(token).Exec(ctx)
 	return err
 }
 

@@ -63,3 +63,15 @@ func (u *UserService) ExistUser(ctx context.Context, email string) error {
 	}
 	return ErrUserAlreadyExist
 }
+
+func (u *UserService) LoginUser(ctx context.Context, data dto.UserLoginDto) (*model.User, error) {
+	user, err := u.UserRepo.GetByEmail(ctx, data.Email)
+	if err != nil {
+		return nil, err
+	}
+	err = u.PasswordRepo.VerifyPasswordText(ctx, user.ID, data.Password)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}

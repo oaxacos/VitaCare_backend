@@ -32,7 +32,7 @@ func NewUserController(s *server.Server, userSvc *user.UserService) {
 	}
 	userController.c.Route(prefix, func(r chi.Router) {
 		r.Post("/users/auth/register", userController.handleRegisterUser)
-		//r.Post("/users/auth/login", userController.handleLogin)
+		r.Post("/users/auth/login", userController.handleLogin)
 		r.Group(func(r chi.Router) {
 			r.Use(middlewares.AuthMiddleware(userController.Config))
 			//r.Post("/users/auth/renew", userController.handleRenewToken)
@@ -70,47 +70,35 @@ func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Reque
 	response.RenderJson(w, "user created", http.StatusCreated)
 }
 
-//func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
-//	var loginData dto.UserLoginDto
-//	err := utils.ReadFromRequest(r, &loginData)
-//	log := logger.GetContextLogger(r.Context())
-//	if err != nil {
-//		response.RenderError(w, http.StatusBadRequest, err.Error())
-//		return
-//	}
-//	validator.NewValidator()
-//	err = validator.Validate(loginData)
-//	if err != nil {
-//		response.RenderError(w, http.StatusBadRequest, err.Error())
-//		return
-//	}
-//	userFind, err := u.userService.Login(r.Context(), loginData)
-//	log.Debugf("user: %v", userFind)
-//	if err != nil {
-//		response.RenderError(w, http.StatusInternalServerError, err.Error())
-//		return
-//	}
-//
-//	// create token
-//	accessToken, refreshToken, err := u.tokenService.RenewTokens(r.Context(), userFind)
-//	if err != nil {
-//		response.RenderError(w, http.StatusInternalServerError, err.Error())
-//		return
-//	}
-//
-//	//save refresh token in cookie
-//	cookie := utils.NewCookieRefreshToken(refreshToken, time.Duration(u.Config.Token.RefreshTimeExpiration)*time.Hour)
-//	response.SetCookie(w, cookie)
-//
-//	dataResponse := dto.UserLoggedInDto{
-//		AccessToken:  accessToken,
-//		UserID:       userFind.ID.String(),
-//		RefreshToken: refreshToken,
-//	}
-//
-//	response.WriteJsonResponse(w, dataResponse, http.StatusOK)
-//}
-//
+func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
+	var loginData dto.UserLoginDto
+	err := utils.ReadFromRequest(r, &loginData)
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	validator.NewValidator()
+	err = validator.Validate(loginData)
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	userFind, err := u.userService.LoginUser(r.Context(), loginData)
+
+	if err != nil {
+		response.RenderFatalError(w, err)
+		return
+	}
+
+	dataResponse := dto.UserLoggedInDto{
+		AccessToken:  "accessToken",
+		UserID:       userFind.ID.String(),
+		RefreshToken: "refreshToken",
+	}
+
+	response.WriteJsonResponse(w, dataResponse, http.StatusOK)
+}
+
 //func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request) {
 //	log := logger.GetContextLogger(r.Context())
 //	claims := utils.GetClaimsFromContext(r.Context())

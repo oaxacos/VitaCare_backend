@@ -5,11 +5,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/application/dto"
 	"github.com/oaxacos/vitacare/internal/domain/model"
+	"github.com/oaxacos/vitacare/internal/domain/service/token"
 )
 
 type TokenService interface {
 	GenerateToken(ctx context.Context, user *model.User) (string, string, error)
 	ValidateRefreshToken(ctx context.Context, refreshToken string) (*model.RefreshToken, error)
+	VerifyAccessToken(ctx context.Context, token string) (*token.AccessTokenClaims, error)
+	DeleteRefreshToken(userID uuid.UUID) error
 }
 
 type UserService interface {

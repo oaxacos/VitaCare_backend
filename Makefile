@@ -1,3 +1,5 @@
+include .envrc
+include $(wildcard .env)
 DB_MIGRATIONS_PATH=migrations
 CONFIG_FILE=config/config.yaml
 TEST_CONFIG_FILE=config/config.test.yaml
@@ -35,8 +37,11 @@ install:
 
 ## dev: run the development server
 .PHONY: dev
-dev:
-	air -c .air.toml
+dev: .env
+	export $$(cat .env | xargs); \
+	#printenv
+	 air -c .air.toml
+
 
 ## test: run the tests
 .PHONY: test
@@ -113,3 +118,27 @@ db-test-load:
 .PHONY: db-test-clean
 db-test-clean:
 	dbmate --url ${TEST_DSN} --migrations-dir ${DB_MIGRATIONS_PATH} down
+
+#clean-env:
+#	rm -f .env
+
+# Rewrites the .env file with new values
+#env: clean-env
+#	echo DATABASE_NAME=${DB_NAME} >> .env
+#	echo DB_USER=${DB_USER} >> .env
+#	echo DB_PASSWORD=${DB_PASSWORD} >> .env
+#	echo DB_HOST=${DB_HOST} >> .env
+#	echo DB_PORT=${PORT} >> .env
+#
+#define setup_env
+#    $(eval ENV_FILE := $(1).env)
+#    @echo " - setup env $(ENV_FILE)"
+#    $(eval include $(1).env)
+#    $(eval export)
+#endef
+
+#devEnv:
+#	$(call setup_env, dev)
+#
+#prodEnv:
+#	$(call setup_env, prod)

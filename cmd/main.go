@@ -17,7 +17,7 @@ func main() {
 	logs := logger.GetGlobalLogger()
 	defer logger.CloseLogger()
 
-	conf, err := config.NewConfig()
+	conf, err := config.NewConfig("")
 	if err != nil {
 		logs.Fatal(err)
 	}

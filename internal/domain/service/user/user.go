@@ -14,6 +14,7 @@ import (
 
 var (
 	ErrUserAlreadyExist = errors.New("user already exist")
+	ErrNoUserWithEmail  = errors.New("invalid credentials")
 )
 
 type UserService struct {
@@ -68,6 +69,9 @@ func (u *UserService) ExistUser(ctx context.Context, email string) error {
 func (u *UserService) LoginUser(ctx context.Context, data dto.UserLoginDto) (*model.User, error) {
 	user, err := u.UserRepo.GetByEmail(ctx, data.Email)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoUserWithEmail
+		}
 		return nil, err
 	}
 	err = u.PasswordRepo.VerifyPasswordText(ctx, user.ID, data.Password)

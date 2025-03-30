@@ -8,6 +8,10 @@ import (
 	"net/http"
 )
 
+const (
+	refreshTokenCookieName = "refresh_token"
+)
+
 func WriteJsonResponse(w http.ResponseWriter, data any, status int) error {
 	d, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
@@ -100,4 +104,24 @@ func DeleteCookie(w http.ResponseWriter, name string) {
 		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	})
+}
+
+func SetRefreshTokenCookie(w http.ResponseWriter, token string) {
+	cookie := &http.Cookie{
+		Name:     refreshTokenCookieName,
+		Value:    token,
+		MaxAge:   60 * 60 * 24 * 7,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	}
+	SetCookie(w, cookie)
+}
+
+func DeleteRefreshTokenCookie(w http.ResponseWriter) {
+	DeleteCookie(w, refreshTokenCookieName)
+}
+
+func Envelop(key string, data any) map[string]any {
+	return map[string]any{key: data}
 }

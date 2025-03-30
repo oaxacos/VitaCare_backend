@@ -2,6 +2,7 @@ package token
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"github.com/oaxacos/vitacare/pkg/logger"
@@ -132,7 +133,7 @@ func (t *TokenSvc) ValidateRefreshToken(ctx context.Context, refreshToken string
 	return beforeToken, nil
 }
 
-func (t *TokenSvc) DeleteRefreshToken(userID uuid.UUID) error {
+func (t *TokenSvc) DeleteRefreshTokenByUser(userID uuid.UUID) error {
 	token, err := t.repo.GetByUserID(context.Background(), userID)
 	if err != nil {
 		return err
@@ -141,4 +142,14 @@ func (t *TokenSvc) DeleteRefreshToken(userID uuid.UUID) error {
 		return nil
 	}
 	return t.repo.Delete(context.Background(), token.ID)
+}
+
+func (t *TokenSvc) DeleteRefreshToken(token string) error {
+	err := t.repo.DeleteByToken(context.Background(), token)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+	}
+	return nil
 }

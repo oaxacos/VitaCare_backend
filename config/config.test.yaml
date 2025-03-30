@@ -10,10 +10,6 @@ database:
   password: postgres
   username: postgres
 
-cors:
-  trusted-origins:
-    - http://localhost:3000
-
 token:
   access-token-key: "access-token-key"
   access-time-expiration: 15

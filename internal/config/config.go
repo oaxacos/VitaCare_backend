@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Server struct {
@@ -63,20 +65,19 @@ type Token struct {
 var errConfigEmpty = errors.New("config file is empty")
 
 func NewConfig() (*Config, error) {
-	filePath, err := getDirectoryFile(configFile)
-	if err != nil {
-		return nil, err
-	}
-	err = k.Load(file.Provider(filePath), yaml.Parser())
+	fmt.Printf("config file: %s\n", os.Getenv("DB_PORT"))
+	err := k.Load(env.Provider("", "_", func(s string) string {
+		//fmt.Printf("s: %s\n", strings.ReplaceAll(s, "_", "."))
+		return strings.ToLower(strings.ReplaceAll(s, "_", "."))
+	}), nil)
+
 	if err != nil {
 		return nil, err
 	}
 	var conf *Config
 	err = k.Unmarshal("", &conf)
+	fmt.Printf("%+v\n", conf)
 
-	if err != nil {
-		return nil, err
-	}
 	if conf == nil {
 		return nil, errConfigEmpty
 	}

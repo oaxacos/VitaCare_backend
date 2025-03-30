@@ -5,6 +5,7 @@ import (
 	"github.com/oaxacos/vitacare/internal/domain/service/token"
 	"github.com/oaxacos/vitacare/internal/domain/service/user"
 	"github.com/oaxacos/vitacare/pkg/logger"
+	"github.com/oaxacos/vitacare/pkg/middlewares"
 	"github.com/oaxacos/vitacare/pkg/server"
 	"net/http"
 
@@ -34,9 +35,12 @@ func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *to
 	userController.c.Route(prefix, func(r chi.Router) {
 		r.Post("/users/auth/register", userController.handleRegisterUser)
 		r.Post("/users/auth/login", userController.handleLogin)
+		r.Post("/users/auth/renew", userController.handleRenewToken)
 		r.Group(func(r chi.Router) {
-			r.Post("/users/auth/renew", userController.handleRenewToken)
+			r.Use(middlewares.AuthMiddleware(s.Config))
+			r.Get("/users/auth/logout", userController.handleLogout)
 		})
+
 	})
 }
 
@@ -153,4 +157,21 @@ func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request
 	}
 
 	response.WriteJsonResponse(w, resp, http.StatusOK)
+}
+
+func (u *UserController) handleLogout(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := logger.GetContextLogger(ctx)
+	claims := utils.GetClaimsFromContext(ctx)
+	if claims == nil {
+		response.RenderUnauthorized(w)
+		return
+	}
+	err := u.tokenService.DeleteRefreshToken(claims.UserID)
+	if err != nil {
+		log.Error(err)
+		response.RenderFatalError(w, err)
+		return
+	}
+	response.RenderJson(w, nil, http.StatusOK)
 }

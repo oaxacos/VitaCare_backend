@@ -93,54 +93,9 @@ func (t *TokenSvc) generateRefreshToken(ctx context.Context, user *model.User) (
 	return tokenString, nil
 }
 
-//	func (t *TokenService) VerifyAccessToken(ctx context.Context, token string) (*AccessTokenClaims, error) {
-//		return t.validateToken(ctx, token, string(t.accessTokenKey))
-//	}
-//
-//	func (t *TokenService) VerifyRefreshToken(ctx context.Context, token string) error {
-//		logs := logger.GetContextLogger(ctx)
-//		if token == "" {
-//			return ErrInvalidToken
-//		}
-//		tokenInDB, err := t.repo.GetByToken(ctx, token)
-//		if err != nil {
-//			logs.Error(err)
-//			return err
-//		}
-//
-//		if t.isExpired(tokenInDB) {
-//			return ErrInvalidToken
-//		}
-//		return nil
-//	}
-//
-//	func (t *TokenService) isExpired(token *model.RefreshToken) bool {
-//		return token.ExpiredAt.Before(time.Now())
-//	}
-//
-//	func (t *TokenService) validateToken(ctx context.Context, tokenString, secret string) (*AccessTokenClaims, error) {
-//		logs := logger.GetContextLogger(ctx)
-//		token, err := jwt.ParseWithClaims(tokenString, &AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-//			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-//				logs.Error("unexpected signing method")
-//				return nil, ErrInvalidToken
-//			}
-//			return []byte(secret), nil
-//		})
-//
-//		if err != nil {
-//			logs.Error(err)
-//			return nil, err
-//		}
-//
-//		claims, ok := token.Claims.(*AccessTokenClaims)
-//		if !ok || !token.Valid {
-//			logs.Error("invalid token")
-//			return nil, ErrInvalidToken
-//		}
-//
-//		return claims, nil
-//	}
+func (t *TokenSvc) VerifyAccessToken(ctx context.Context, token string) (*AccessTokenClaims, error) {
+	return t.VerifyAccessToken(ctx, token)
+}
 
 func (t *TokenSvc) isExpired(token *model.RefreshToken) bool {
 	return token.ExpiredAt.Before(time.Now())
@@ -175,4 +130,15 @@ func (t *TokenSvc) ValidateRefreshToken(ctx context.Context, refreshToken string
 		return nil, ErrInvalidToken
 	}
 	return beforeToken, nil
+}
+
+func (t *TokenSvc) DeleteRefreshToken(userID uuid.UUID) error {
+	token, err := t.repo.GetByUserID(context.Background(), userID)
+	if err != nil {
+		return err
+	}
+	if token == nil {
+		return nil
+	}
+	return t.repo.Delete(context.Background(), token.ID)
 }

@@ -38,3 +38,10 @@ to know all the commands available run the next command
 ```bash
     make help
 ```
+
+### View the project documentation
+To view the project documentation locally run the next command
+```bash
+    make dev
+```
+and navigate to `http://localhost:8000/` in your browser to view the documentation

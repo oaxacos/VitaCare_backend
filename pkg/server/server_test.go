@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/oaxacos/vitacare/internal/application/dto"
 	"github.com/oaxacos/vitacare/internal/config"
 	"net/http"
 	"net/http/httptest"
@@ -40,19 +41,19 @@ func TestServer(t *testing.T) {
 
 func TestServerNotFound(t *testing.T) {
 	s := NewServer(conf)
-	var notFound = map[string]string{
-		"error": "page not found",
-	}
+	var notFound = dto.MapResponseError("page not found", http.StatusNotFound)
 	req, err := http.NewRequest("GET", "/api/v0/healthcheck/test", nil)
 	assert.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
 
 	s.ServeHTTP(recorder, req)
-	receivedMessage := make(map[string]string)
+	var receivedMessage dto.ErrorResponse
 	assert.Equal(t, http.StatusNotFound, recorder.Code)
 
 	err = json.Unmarshal(recorder.Body.Bytes(), &receivedMessage)
-	assert.NoError(t, err)
-	assert.Equal(t, notFound, receivedMessage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equalf(t, notFound, receivedMessage, "expected %v but got %v", notFound, receivedMessage)
 }

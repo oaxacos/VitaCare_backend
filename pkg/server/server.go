@@ -42,7 +42,7 @@ func NewServer(conf *config.Config) *Server {
 
 	r.Get("/api/v0/healthcheck", handleHealthcheck)
 
-	r.Get("/*", httpSwagger.Handler(
+	r.Get("/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL("swagger/doc.json"), //The url pointing to API definition
 	))
 

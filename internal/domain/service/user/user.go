@@ -27,7 +27,7 @@ func NewUserService(userRepo repository.UserRepository, passwordRepo repository.
 	}
 }
 
-func (u *UserService) CreateUser(ctx context.Context, user dto.UserDto) error {
+func (u *UserService) CreateUser(ctx context.Context, user dto.UserDto) (*model.User, error) {
 	newUser := model.NewPatientUser(user)
 	log := logger.GetContextLogger(ctx)
 	//save user
@@ -48,9 +48,9 @@ func (u *UserService) CreateUser(ctx context.Context, user dto.UserDto) error {
 	})
 	if err != nil {
 		log.Error(err)
-		return err
+		return nil, err
 	}
-	return nil
+	return newUser, nil
 }
 
 func (u *UserService) ExistUser(ctx context.Context, email string) error {

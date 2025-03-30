@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/oaxacos/vitacare/internal/config"
+	"github.com/oaxacos/vitacare/internal/domain/service/token"
 	"github.com/oaxacos/vitacare/internal/domain/service/user"
 	"github.com/oaxacos/vitacare/pkg/middlewares"
 	"github.com/oaxacos/vitacare/pkg/server"
@@ -15,20 +16,20 @@ import (
 )
 
 type UserController struct {
-	userService *user.UserService
-	//tokenService *token.TokenService
-	c      *chi.Mux
-	Config *config.Config
+	userService  *user.UserService
+	tokenService *token.TokenSvc
+	c            *chi.Mux
+	Config       *config.Config
 }
 
 const prefix = "/api/v0"
 
-func NewUserController(s *server.Server, userSvc *user.UserService) {
+func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *token.TokenSvc) {
 	userController := &UserController{
-		c:           s.Mux,
-		Config:      s.Config,
-		userService: userSvc,
-		//tokenService: tokenSvc,
+		c:            s.Mux,
+		Config:       s.Config,
+		userService:  userSvc,
+		tokenService: tokenSvc,
 	}
 	userController.c.Route(prefix, func(r chi.Router) {
 		r.Post("/users/auth/register", userController.handleRegisterUser)
@@ -43,6 +44,7 @@ func NewUserController(s *server.Server, userSvc *user.UserService) {
 func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 	// create user
 	var userData dto.UserDto
+	ctx := r.Context()
 	err := utils.ReadFromRequest(r, &userData)
 	if err != nil {
 		response.RenderError(w, http.StatusBadRequest, err.Error())
@@ -61,13 +63,24 @@ func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	// create user
-	err = u.userService.CreateUser(r.Context(), userData)
+	newUser, err := u.userService.CreateUser(r.Context(), userData)
 	if err != nil {
 		response.RenderFatalError(w, err)
 		return
 	}
+	// create refresh token and access token
+	accessToken, refreshToken, err := u.tokenService.GenerateToken(ctx, newUser)
+	if err != nil {
+		response.RenderFatalError(w, err)
+		return
+	}
+	dataResponse := dto.UserLoggedInDto{
+		AccessToken:  accessToken,
+		UserID:       newUser.ID.String(),
+		RefreshToken: refreshToken,
+	}
 
-	response.RenderJson(w, "user created", http.StatusCreated)
+	response.RenderJson(w, dataResponse, http.StatusCreated)
 }
 
 func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {

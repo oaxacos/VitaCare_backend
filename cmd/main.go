@@ -3,7 +3,9 @@ package main
 import (
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/internal/domain/repository/password"
+	tokenRepository "github.com/oaxacos/vitacare/internal/domain/repository/token"
 	userRepository "github.com/oaxacos/vitacare/internal/domain/repository/user"
+	"github.com/oaxacos/vitacare/internal/domain/service/token"
 	"github.com/oaxacos/vitacare/internal/domain/service/user"
 	"github.com/oaxacos/vitacare/internal/infrastructure/db"
 	"github.com/oaxacos/vitacare/internal/infrastructure/http"
@@ -33,14 +35,14 @@ func main() {
 	}()
 	passRepo := password.NewPasswordRepository(dbRepo)
 	userRepo := userRepository.NewUserRepository(dbRepo)
-	// tokenRepo := tokenRepository.NewTokenRepository(connection.DB)
+	tokenRepo := tokenRepository.NewTokenRepository(dbRepo)
 
 	userSvc := user.NewUserService(userRepo, passRepo)
-	// tokenSvc := token.NewTokenService(conf, tokenRepo)
+	tokenSvc := token.NewTokenService(conf, tokenRepo)
 
 	s := server.NewServer(conf)
 
-	http.NewUserController(s, userSvc)
+	http.NewUserController(s, userSvc, tokenSvc)
 
 	err = s.Start()
 	if err != nil {

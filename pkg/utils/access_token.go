@@ -91,3 +91,11 @@ func NewCookieRefreshToken(token string, maxAge time.Duration) *http.Cookie {
 		MaxAge:   int(maxAge.Seconds()),
 	}
 }
+
+func GetRefreshTokenFromCookie(r *http.Request) string {
+	cookie, err := r.Cookie(RefreshTokenKey)
+	if err != nil {
+		return ""
+	}
+	return cookie.Value
+}

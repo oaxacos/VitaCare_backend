@@ -4,22 +4,22 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/domain/model"
+	"github.com/oaxacos/vitacare/internal/infrastructure/db"
 	"github.com/oaxacos/vitacare/pkg/logger"
-	"github.com/uptrace/bun"
 )
 
 type RefreshTokenRepo struct {
-	DB *bun.DB
+	DB *db.DBRepository
 }
 
-func NewTokenRepository(db *bun.DB) *RefreshTokenRepo {
+func NewTokenRepository(db *db.DBRepository) *RefreshTokenRepo {
 	return &RefreshTokenRepo{
 		DB: db,
 	}
 }
 
-func (t *RefreshTokenRepo) Save(ctx context.Context, tx *bun.Tx, token *model.RefreshToken) error {
-	_, err := tx.NewInsert().Model(token).Exec(ctx)
+func (t *RefreshTokenRepo) Save(ctx context.Context, token *model.RefreshToken) error {
+	_, err := t.DB.NewInsert().Model(token).Exec(ctx)
 	return err
 }
 
@@ -49,9 +49,4 @@ func (t *RefreshTokenRepo) GetByToken(ctx context.Context, token string) (*model
 		return nil, err
 	}
 	return refreshToken, nil
-}
-
-func (t *RefreshTokenRepo) Update(ctx context.Context, token *model.RefreshToken) error {
-	_, err := t.DB.NewUpdate().Model(token).Where("id = ?", token.ID).Exec(ctx)
-	return err
 }

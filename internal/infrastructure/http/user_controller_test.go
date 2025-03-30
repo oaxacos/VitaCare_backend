@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/internal/domain/repository/password"
 	tokenRepository "github.com/oaxacos/vitacare/internal/domain/repository/token"
@@ -64,13 +63,16 @@ func TestUserController(t *testing.T) {
 		}
 
 		response := executeRequest(req, s)
-
 		assert.NotNil(t, response)
 		assert.Equal(t, http.StatusCreated, response.Code)
-		fmt.Printf("response: %v", response.Body.String())
 		// get cookie
-		cookie := response.Header().Get("refresh_token")
+		resp := response.Result()
+		defer resp.Body.Close()
+		cookie := resp.Cookies()
+		assert.Greater(t, len(cookie), 0, "cookie should not be empty")
 		assert.NotEmpty(t, cookie)
+		refreshToken := cookie[0].Value
+		assert.NotEmpty(t, refreshToken)
 
 		// make again the request for the same user
 		response = executeRequest(req, s)

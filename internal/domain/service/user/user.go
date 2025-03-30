@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/application/dto"
 	"github.com/oaxacos/vitacare/internal/domain/model"
 	"github.com/oaxacos/vitacare/internal/domain/repository"
@@ -74,4 +75,8 @@ func (u *UserService) LoginUser(ctx context.Context, data dto.UserLoginDto) (*mo
 		return nil, err
 	}
 	return user, nil
+}
+
+func (u *UserService) GetByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	return u.UserRepo.GetByID(ctx, id)
 }

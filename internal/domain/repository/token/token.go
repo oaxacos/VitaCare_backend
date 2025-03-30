@@ -2,6 +2,8 @@ package tokenRepository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/domain/model"
 	"github.com/oaxacos/vitacare/internal/infrastructure/db"
@@ -34,6 +36,9 @@ func (t *RefreshTokenRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*
 	logger.GetContextLogger(ctx).Debugf("query: %s", q.String())
 	err := q.Scan(ctx)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return token, nil
@@ -41,9 +46,7 @@ func (t *RefreshTokenRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*
 
 func (t *RefreshTokenRepo) GetByToken(ctx context.Context, token string) (*model.RefreshToken, error) {
 	refreshToken := new(model.RefreshToken)
-
 	q := t.DB.NewSelect().Model(refreshToken).Where("token = ?", token)
-	logger.GetContextLogger(ctx).Debugf("query: %s", q.String())
 	err := q.Scan(ctx)
 	if err != nil {
 		return nil, err

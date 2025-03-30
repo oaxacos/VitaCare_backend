@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/internal/domain/service/token"
 	"github.com/oaxacos/vitacare/internal/domain/service/user"
@@ -40,7 +41,6 @@ func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *to
 			r.Use(middlewares.AuthMiddleware(s.Config))
 			r.Get("/users/auth/logout", userController.handleLogout)
 		})
-
 	})
 }
 
@@ -79,10 +79,15 @@ func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Reque
 	}
 	dataResponse := dto.UserLoggedInDto{
 		AccessToken:  accessToken,
-		UserID:       newUser.ID.String(),
 		RefreshToken: refreshToken,
+		User: dto.User{
+			ID:        newUser.ID,
+			FirstName: newUser.FirstName,
+			LastName:  newUser.LastName,
+			Email:     newUser.Email,
+		},
 	}
-
+	response.SetRefreshTokenCookie(w, refreshToken)
 	response.RenderJson(w, dataResponse, http.StatusCreated)
 }
 
@@ -100,7 +105,6 @@ func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userWithCredentials, err := u.userService.LoginUser(r.Context(), loginData)
-
 	if err != nil {
 		response.RenderFatalError(w, err)
 		return
@@ -113,11 +117,15 @@ func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dataResponse := dto.UserLoggedInDto{
-		AccessToken:  accessToken,
-		UserID:       userWithCredentials.ID.String(),
-		RefreshToken: refreshToken,
+		AccessToken: accessToken,
+		User: dto.User{
+			ID:        userWithCredentials.ID,
+			FirstName: userWithCredentials.FirstName,
+			LastName:  userWithCredentials.LastName,
+			Email:     userWithCredentials.Email,
+		},
 	}
-
+	response.SetRefreshTokenCookie(w, refreshToken)
 	response.WriteJsonResponse(w, dataResponse, http.StatusOK)
 }
 
@@ -126,7 +134,6 @@ func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request
 	log := logger.GetContextLogger(ctx)
 	var refreshToken dto.TokenRefreshRequest
 	err := utils.ReadFromRequest(r, &refreshToken)
-	log.Debugf("refresh token: %s", refreshToken.RefreshToken)
 	if err != nil {
 		response.RenderError(w, http.StatusBadRequest, err.Error())
 		return
@@ -141,6 +148,17 @@ func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request
 	refreshTokenModel, err := u.tokenService.ValidateRefreshToken(ctx, refreshToken.RefreshToken)
 	if err != nil {
 		log.Error(err)
+		if errors.Is(err, token.ErrInvalidToken) {
+			err := u.tokenService.DeleteRefreshToken(refreshToken.RefreshToken)
+			log.Error(err)
+			if err != nil {
+
+				response.RenderFatalError(w, err)
+				return
+			}
+			response.RenderUnauthorized(w)
+			return
+		}
 		response.RenderUnauthorized(w)
 		return
 	}
@@ -154,8 +172,14 @@ func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request
 
 	resp := dto.TokenRefreshResponse{
 		AccessToken: newAccessToken,
+		User: dto.User{
+			ID:        userInDB.ID,
+			FirstName: userInDB.FirstName,
+			LastName:  userInDB.LastName,
+			Email:     userInDB.Email,
+		},
 	}
-
+	response.SetRefreshTokenCookie(w, refreshToken.RefreshToken)
 	response.WriteJsonResponse(w, resp, http.StatusOK)
 }
 
@@ -167,11 +191,12 @@ func (u *UserController) handleLogout(w http.ResponseWriter, r *http.Request) {
 		response.RenderUnauthorized(w)
 		return
 	}
-	err := u.tokenService.DeleteRefreshToken(claims.UserID)
+	err := u.tokenService.DeleteRefreshTokenByUser(claims.UserID)
 	if err != nil {
 		log.Error(err)
 		response.RenderFatalError(w, err)
 		return
 	}
+	response.DeleteRefreshTokenCookie(w)
 	response.RenderJson(w, nil, http.StatusOK)
 }

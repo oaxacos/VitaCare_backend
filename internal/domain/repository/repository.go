@@ -12,6 +12,7 @@ type RefreshTokenRepository interface {
 	Delete(ctx context.Context, tokenID uuid.UUID) error
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*model.RefreshToken, error)
 	GetByToken(ctx context.Context, token string) (*model.RefreshToken, error)
+	DeleteByToken(ctx context.Context, token string) error
 }
 
 type UserRepository interface {

@@ -2,12 +2,14 @@ package server
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/pkg/logger"
 	"github.com/oaxacos/vitacare/pkg/response"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 var defaultPort = ":8080"
@@ -56,6 +58,24 @@ func (s *Server) Start() error {
 		port = ":" + portStr
 	}
 	logs.Infof("start server on %s", port)
+	return http.ListenAndServe(port, s.Mux)
+}
+
+func (s *Server) StartWithTimeout(timeout time.Duration) error {
+	logs := logger.GetGlobalLogger()
+	port := defaultPort
+	portStr := strconv.Itoa(s.Config.Server.Port)
+	if portStr != "" {
+		port = ":" + portStr
+	}
+	logs.Infof("start server on %s", port)
+	logs.Infof("start timeout %d", timeout)
+
+	s.Group(func(r chi.Router) {
+		r.Use(middleware.Timeout(timeout))
+
+	})
+
 	return http.ListenAndServe(port, s.Mux)
 }
 

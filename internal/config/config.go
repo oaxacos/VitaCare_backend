@@ -3,12 +3,11 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/flashlabs/rootpath/location"
 	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/env"
+	env2 "github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -31,28 +30,33 @@ type Database struct {
 }
 
 var (
-	k              = koanf.New(".")
-	kTest          = koanf.New(".")
-	configFile     = "config.yaml"
-	configTestFile = "config.test.yaml"
-	configFolder   = "config"
+	k            = koanf.New(".")
+	configFolder = "config"
 )
 
 type Config struct {
-	Server   Server   `koanf:"Server"`
-	Database Database `koanf:"Database"`
-	Cors     Cors     `koanf:"Cors"`
-	Token    Token    `koanf:"Token"`
+	Server   Server   `koanf:"server"`
+	Database Database `koanf:"database"`
+	Cors     Cors     `koanf:"cors"`
+	Token    Token    `koanf:"token"`
 }
 
-// todo: find a better way to get the root directory
-func getDirectoryFile(fileName string) (string, error) {
-	rootDir := os.Getenv("PROJECT_ROOT")
-	if rootDir == "" {
-		return "", errors.New("PROJECT_ROOT is not set, please run `make shell`")
+func getConfigFile(env []string) (*koanf.Koanf, error) {
+
+	k := koanf.New(".")
+	confile := "config/config.yaml"
+	if len(env) > 0 && env[0] != "" {
+		confile = fmt.Sprintf("config/config.%s.yaml", env[0])
+		if err := location.Chdir(); err != nil {
+			panic(err)
+		}
 	}
-	configPath := filepath.Join(rootDir, configFolder, fileName)
-	return configPath, nil
+
+	if err := k.Load(file.Provider(confile), yaml.Parser()); err != nil {
+		return nil, err
+	}
+
+	return k, nil
 }
 
 type Token struct {
@@ -64,44 +68,25 @@ type Token struct {
 
 var errConfigEmpty = errors.New("config file is empty")
 
-func NewConfig() (*Config, error) {
-	fmt.Printf("config file: %s\n", os.Getenv("DB_PORT"))
-	err := k.Load(env.Provider("", "_", func(s string) string {
-		//fmt.Printf("s: %s\n", strings.ReplaceAll(s, "_", "."))
-		return strings.ToLower(strings.ReplaceAll(s, "_", "."))
-	}), nil)
+func NewConfig(env ...string) (*Config, error) {
+	k, err := getConfigFile(env)
+	if err != nil {
+		return nil, err
+	}
 
+	// load from env, we can override the config file
+	err = k.Load(env2.Provider("", ".", func(s string) string {
+		val := strings.ToLower(strings.Replace(s, "_", ".", -1))
+		return val
+	}), nil)
 	if err != nil {
 		return nil, err
 	}
 	var conf *Config
 	err = k.Unmarshal("", &conf)
-	fmt.Printf("%+v\n", conf)
-
-	if conf == nil {
-		return nil, errConfigEmpty
-	}
-	return conf, nil
-}
-
-func NewConfigTest() (*Config, error) {
-	filePath, err := getDirectoryFile(configTestFile)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("file path: %s\n", filePath)
-	err = kTest.Load(file.Provider(filePath), yaml.Parser())
-	if err != nil {
-		return nil, err
-	}
-	var conf *Config
-	err = kTest.Unmarshal("", &conf)
 
-	if err != nil {
-		return nil, err
-	}
-	if conf == nil {
-		return nil, errConfigEmpty
-	}
 	return conf, nil
 }

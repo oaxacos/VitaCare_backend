@@ -53,3 +53,8 @@ func (t *RefreshTokenRepo) GetByToken(ctx context.Context, token string) (*model
 	}
 	return refreshToken, nil
 }
+
+func (t *RefreshTokenRepo) DeleteByToken(ctx context.Context, token string) error {
+	_, err := t.DB.NewDelete().Model((*model.RefreshToken)(nil)).Where("token = ?", token).Exec(ctx)
+	return err
+}

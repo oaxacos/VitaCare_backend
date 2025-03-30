@@ -1,0 +1,131 @@
+definitions:
+  dto.TokenRefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  dto.User:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+    type: object
+  dto.UserDto:
+    properties:
+      email:
+        type: string
+      first_name:
+        minLength: 3
+        type: string
+      last_name:
+        minLength: 3
+        type: string
+      password:
+        minLength: 6
+        type: string
+      password_confirmation:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - password_confirmation
+    type: object
+  dto.UserLoggedInDto:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.User'
+    type: object
+  dto.UserLoginDto:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+info:
+  contact: {}
+  description: This the service of Vitacare.
+  title: VitaCare API
+  version: "0.0"
+paths:
+  /api/v0/user/auth/login:
+    post:
+      description: login a user and set a cookie with the refresh token
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserLoginDto'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserLoggedInDto'
+      summary: login a user
+      tags:
+      - users
+  /api/v0/user/auth/logout:
+    put:
+      description: logout a user and delete the refresh token
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: logout a user
+      tags:
+      - users
+  /api/v0/user/auth/register:
+    post:
+      description: Register a new user in the system
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserDto'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserLoggedInDto'
+      summary: Register a new user
+      tags:
+      - users
+  /api/v0/user/auth/renew:
+    post:
+      description: renew access token with refresh token
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TokenRefreshRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserDto'
+      summary: renew access token
+      tags:
+      - users
+swagger: "2.0"

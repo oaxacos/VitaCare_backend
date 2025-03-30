@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/oaxacos/vitacare/internal/application/dto"
 	"github.com/oaxacos/vitacare/pkg/logger"
 	"net/http"
 )
@@ -32,9 +33,7 @@ func RenderJson(w http.ResponseWriter, data any, status int) {
 }
 
 func RenderError(w http.ResponseWriter, status int, message any) {
-	res := map[string]any{
-		"error": message,
-	}
+	res := dto.MapResponseError(message, status)
 	log := logger.GetGlobalLogger()
 	err := WriteJsonResponse(w, res, status)
 
@@ -43,7 +42,6 @@ func RenderError(w http.ResponseWriter, status int, message any) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	log.Errorf("%s", message)
 }
 
 func RenderServerError(w http.ResponseWriter, err error) {
@@ -66,7 +64,7 @@ func RenderFatalError(w http.ResponseWriter, err error) {
 	if errors.Is(err, sql.ErrNoRows) {
 		RenderServerError(w, err)
 	} else {
-		RenderError(w, http.StatusInternalServerError, err.Error())
+		RenderError(w, http.StatusBadRequest, err.Error())
 	}
 }
 

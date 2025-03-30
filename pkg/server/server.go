@@ -6,6 +6,7 @@ import (
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/pkg/logger"
 	"github.com/oaxacos/vitacare/pkg/response"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -40,6 +41,10 @@ func NewServer(conf *config.Config) *Server {
 	r.Use(enableCors(conf))
 
 	r.Get("/api/v0/healthcheck", handleHealthcheck)
+
+	r.Get("/*", httpSwagger.Handler(
+		httpSwagger.URL("swagger/doc.json"), //The url pointing to API definition
+	))
 
 	r.NotFound(handleNotFound)
 	r.MethodNotAllowed(handleMethodNotAllowed)

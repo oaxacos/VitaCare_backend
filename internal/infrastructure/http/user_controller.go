@@ -24,7 +24,7 @@ type UserController struct {
 	Config       *config.Config
 }
 
-const prefix = "/api/v0"
+const prefix = "/api/v0/users/auth"
 
 func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *token.TokenSvc) {
 	userController := &UserController{
@@ -34,16 +34,22 @@ func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *to
 		tokenService: tokenSvc,
 	}
 	userController.c.Route(prefix, func(r chi.Router) {
-		r.Post("/users/auth/register", userController.handleRegisterUser)
-		r.Post("/users/auth/login", userController.handleLogin)
-		r.Post("/users/auth/renew", userController.handleRenewToken)
+		r.Post("/register", userController.handleRegisterUser)
+		r.Post("/login", userController.handleLogin)
+		r.Post("/renew", userController.handleRenewToken)
 		r.Group(func(r chi.Router) {
 			r.Use(middlewares.AuthMiddleware(s.Config))
-			r.Get("/users/auth/logout", userController.handleLogout)
+			r.Put("/logout", userController.handleLogout)
 		})
 	})
 }
 
+// @Router /api/v0/user/auth/register [post]
+// @Summary Register a new user
+// @Description Register a new user in the system
+// @Tags users
+// @Success 200 {object} dto.UserLoggedInDto
+// @Param user body dto.UserDto true "User data"
 func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 	// create user
 	var userData dto.UserDto
@@ -91,6 +97,12 @@ func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Reque
 	response.RenderJson(w, dataResponse, http.StatusCreated)
 }
 
+// @Router /api/v0/user/auth/login [post]
+// @Summary login a user
+// @Description login a user and set a cookie with the refresh token
+// @Tags users
+// @Success 200 {object} dto.UserLoggedInDto
+// @Param user body dto.UserLoginDto true "User data"
 func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var loginData dto.UserLoginDto
 	err := utils.ReadFromRequest(r, &loginData)
@@ -129,6 +141,12 @@ func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
 	response.WriteJsonResponse(w, dataResponse, http.StatusOK)
 }
 
+// @Router /api/v0/user/auth/renew [post]
+// @Summary renew access token
+// @Description renew access token with refresh token
+// @Tags users
+// @Success 200 {object} dto.UserDto
+// @Param user body dto.TokenRefreshRequest true "User data"
 func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := logger.GetContextLogger(ctx)
@@ -183,6 +201,11 @@ func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request
 	response.WriteJsonResponse(w, resp, http.StatusOK)
 }
 
+// @Router /api/v0/user/auth/logout [put]
+// @Summary logout a user
+// @Description logout a user and delete the refresh token
+// @Tags users
+// @Success 200 {object} string
 func (u *UserController) handleLogout(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := logger.GetContextLogger(ctx)
@@ -198,5 +221,5 @@ func (u *UserController) handleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.DeleteRefreshTokenCookie(w)
-	response.RenderJson(w, nil, http.StatusOK)
+	response.RenderJson(w, response.Envelop("message", "success"), http.StatusOK)
 }

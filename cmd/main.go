@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/oaxacos/vitacare/docs"
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/internal/domain/repository/password"
 	tokenRepository "github.com/oaxacos/vitacare/internal/domain/repository/token"
@@ -13,6 +14,9 @@ import (
 	"github.com/oaxacos/vitacare/pkg/server"
 )
 
+// @title VitaCare API
+// @version 0.0
+// @description This the service of Vitacare.
 func main() {
 	logs := logger.GetGlobalLogger()
 	defer logger.CloseLogger()

@@ -84,17 +84,6 @@ type Cookie struct {
 	SameSite http.SameSite
 }
 
-func SetCookie(w http.ResponseWriter, cookie *http.Cookie) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     cookie.Name,
-		Value:    cookie.Value,
-		MaxAge:   cookie.MaxAge,
-		HttpOnly: cookie.HttpOnly,
-		Secure:   cookie.Secure,
-		SameSite: cookie.SameSite,
-	})
-}
-
 func DeleteCookie(w http.ResponseWriter, name string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
@@ -115,7 +104,7 @@ func SetRefreshTokenCookie(w http.ResponseWriter, token string) {
 		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	}
-	SetCookie(w, cookie)
+	http.SetCookie(w, cookie)
 }
 
 func DeleteRefreshTokenCookie(w http.ResponseWriter) {

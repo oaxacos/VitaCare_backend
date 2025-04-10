@@ -9,7 +9,6 @@ import (
 )
 
 var Validator *validator.Validate
-var PrettyError string
 
 func AtLeastOneFieldRequired(fl validator.FieldLevel) bool {
 	// Check the parent struct value

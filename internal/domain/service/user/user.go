@@ -140,6 +140,7 @@ func (u *UserService) UpdateUserInfo(ctx context.Context, id uuid.UUID, data dto
 	if data.Phone != "" {
 		user.Phone = data.Phone
 	}
+	//TODO: find a way to handle birthdate, can be iso or yy-mm-dd, or dd-mm-yy
 
 	return u.UserRepo.Update(user)
 }

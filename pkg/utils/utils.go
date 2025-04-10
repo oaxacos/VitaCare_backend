@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"reflect"
 )
 
 var (
@@ -32,4 +33,24 @@ func ReadFromRequest(r *http.Request, data any) error {
 		}
 	}
 	return nil
+}
+
+func IsEmptyStruct[T any](data any) bool {
+	if data == nil {
+		return true
+	}
+	if str, ok := data.(string); ok {
+		return str == ""
+	}
+	if _, ok := data.(int); ok {
+		return data == 0
+	}
+
+	if _, ok := data.(float64); ok {
+		return data == 0.0
+	}
+
+	//ou yeah
+	newT := new(T)
+	return reflect.DeepEqual(data, *newT)
 }

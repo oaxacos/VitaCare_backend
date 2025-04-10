@@ -115,3 +115,11 @@ db-test-load:
 .PHONY: db-test-clean
 db-test-clean:
 	dbmate --url ${TEST_DSN} --migrations-dir ${DB_MIGRATIONS_PATH} down
+
+## update-swagger: update the swagger documentation and run the server
+.PHONY: update-swagger
+update-swagger:
+	@echo "Updating swagger documentation..."
+	swag init -g cmd/main.go
+	@echo "Running server..."
+	make dev

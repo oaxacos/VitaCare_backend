@@ -1,6 +1,8 @@
 package dto
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type UserDto struct {
 	FirstName            string `json:"first_name" validate:"required,min=3"`
@@ -26,4 +28,8 @@ type User struct {
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
 	Email     string    `json:"email"`
+}
+
+type UpdateUserRoleDto struct {
+	Role string `json:"role" validate:"required,oneof=admin doctor patient secretary"`
 }

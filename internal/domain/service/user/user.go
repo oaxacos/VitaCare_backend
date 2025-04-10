@@ -15,6 +15,7 @@ import (
 var (
 	ErrUserAlreadyExist = errors.New("user already exist")
 	ErrNoUserWithEmail  = errors.New("invalid credentials")
+	ErrNoUserWithID     = errors.New("user not found")
 )
 
 type UserService struct {
@@ -82,5 +83,33 @@ func (u *UserService) LoginUser(ctx context.Context, data dto.UserLoginDto) (*mo
 }
 
 func (u *UserService) GetByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
-	return u.UserRepo.GetByID(ctx, id)
+	user, err := u.UserRepo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoUserWithID
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+func (u *UserService) UpdateUserRole(ctx context.Context, id uuid.UUID, role string) error {
+
+	user, err := u.UserRepo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNoUserWithID
+		}
+		return err
+	}
+	err = user.UpdateRole(role)
+	if err != nil {
+		return err
+	}
+	logger.GetContextLogger(ctx).Infof("user %s updated to role %s", user.Email, user.Rol)
+	err = u.UserRepo.Update(user)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -20,6 +20,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	WithTransaction(ctx context.Context, fn func(tx *bun.Tx) error) error
+	Update(user *model.User) error
 }
 
 type PasswordRepository interface {

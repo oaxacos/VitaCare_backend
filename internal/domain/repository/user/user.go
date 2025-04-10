@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
+
 	"github.com/uptrace/bun"
 
 	"github.com/google/uuid"
@@ -71,4 +73,14 @@ func (u *UserRepo) AlreadyExist(ctx context.Context, email string) error {
 
 func (u *UserRepo) WithTransaction(ctx context.Context, fn func(tx *bun.Tx) error) error {
 	return u.DB.WithTransaction(ctx, fn)
+}
+
+func (u *UserRepo) Update(user *model.User) error {
+	user.UpdateAt = time.Now()
+	q := u.DB.NewUpdate().Model(user).WherePK()
+	_, err := q.Exec(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
 }

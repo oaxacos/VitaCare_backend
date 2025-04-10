@@ -2,13 +2,19 @@ package model
 
 import (
 	"database/sql"
+	"errors"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/application/dto"
 	"github.com/uptrace/bun"
-	"time"
 )
 
 type UserRole string
+
+var (
+	ErrInvalidRole = errors.New("invalid role")
+)
 
 var (
 	AdminRole     UserRole = "admin"
@@ -50,4 +56,25 @@ func NewPatientUser(dto dto.UserDto) *User {
 	user.Password = password
 
 	return user
+}
+
+func (u *User) IsAdmin() bool {
+	return u.Rol == AdminRole
+}
+
+func (u *User) UpdateRole(role string) error {
+	switch role {
+	case string(AdminRole):
+		u.Rol = AdminRole
+	case string(DoctorRole):
+		u.Rol = DoctorRole
+	case string(PatientRole):
+		u.Rol = PatientRole
+	case string(SecretaryRole):
+		u.Rol = SecretaryRole
+	default:
+		return ErrInvalidRole
+	}
+	u.UpdateAt = time.Now()
+	return nil
 }

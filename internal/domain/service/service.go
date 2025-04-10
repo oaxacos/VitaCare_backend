@@ -21,4 +21,5 @@ type UserService interface {
 	ExistUser(ctx context.Context, email string) error
 	LoginUser(ctx context.Context, data dto.UserLoginDto) (*model.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
+	UpdateUserRole(ctx context.Context, id uuid.UUID, role string) error
 }

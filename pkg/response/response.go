@@ -55,6 +55,11 @@ func RenderNotFound(w http.ResponseWriter) {
 	RenderError(w, http.StatusNotFound, message)
 }
 
+func RenderForbidden(w http.ResponseWriter) {
+	message := "forbidden"
+	RenderError(w, http.StatusForbidden, message)
+}
+
 func RenderBadRequest(w http.ResponseWriter) {
 	message := "bad request"
 	RenderError(w, http.StatusBadRequest, message)

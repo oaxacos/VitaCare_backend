@@ -2,13 +2,16 @@ package http
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
+
+	"github.com/google/uuid"
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/internal/domain/service/token"
 	"github.com/oaxacos/vitacare/internal/domain/service/user"
 	"github.com/oaxacos/vitacare/pkg/logger"
 	"github.com/oaxacos/vitacare/pkg/middlewares"
 	"github.com/oaxacos/vitacare/pkg/server"
-	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/oaxacos/vitacare/internal/application/dto"
@@ -24,7 +27,7 @@ type UserController struct {
 	Config       *config.Config
 }
 
-const prefix = "/api/v0/users/auth"
+const prefix = "/api/v0/users"
 
 func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *token.TokenSvc) {
 	userController := &UserController{
@@ -33,13 +36,24 @@ func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *to
 		userService:  userSvc,
 		tokenService: tokenSvc,
 	}
+
 	userController.c.Route(prefix, func(r chi.Router) {
-		r.Post("/register", userController.handleRegisterUser)
-		r.Post("/login", userController.handleLogin)
-		r.Post("/renew", userController.handleRenewToken)
+		// authPath := fmt.Sprintf("%s/auth", prefix)
+		// fmt.Printf("auth path: %s", authPath)
+		r.Route("/auth", func(r chi.Router) {
+
+			r.Post("/register", userController.handleRegisterUser)
+			r.Post("/login", userController.handleLogin)
+			r.Post("/renew", userController.handleRenewToken)
+			r.Group(func(r chi.Router) {
+				r.Use(middlewares.AuthMiddleware(s.Config))
+				r.Put("/logout", userController.handleLogout)
+			})
+
+		})
 		r.Group(func(r chi.Router) {
-			r.Use(middlewares.AuthMiddleware(s.Config))
-			r.Put("/logout", userController.handleLogout)
+			r.Use(middlewares.AuthMiddleware(s.Config), middlewares.AdminMiddleware(s.Config))
+			r.Patch("/{id}/role", userController.handleUpdateUserRole)
 		})
 	})
 }
@@ -222,4 +236,40 @@ func (u *UserController) handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	response.DeleteRefreshTokenCookie(w)
 	response.RenderJson(w, response.Envelop("message", "success"), http.StatusOK)
+}
+
+// @Summary Update user role
+// @Description Update user role
+// @Tags users
+// @Accept json
+// @Produce json
+func (u *UserController) handleUpdateUserRole(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	// claims := utils.GetClaimsFromContext(ctx)
+	userIDToUpdate := chi.URLParam(r, "id")
+
+	var updateUserRole dto.UpdateUserRoleDto
+
+	userIdParsed, err := uuid.Parse(userIDToUpdate)
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, fmt.Sprintf("invalid user id: %s", userIDToUpdate))
+		return
+	}
+
+	err = utils.ReadFromRequest(r, &updateUserRole)
+
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = u.userService.UpdateUserRole(ctx, userIdParsed, updateUserRole.Role)
+	if err != nil {
+		response.RenderFatalError(w, err)
+		return
+	}
+	resp := response.Envelop("message", "user role updated")
+
+	response.RenderJson(w, resp, http.StatusOK)
+
 }

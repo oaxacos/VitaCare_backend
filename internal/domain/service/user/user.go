@@ -113,3 +113,33 @@ func (u *UserService) UpdateUserRole(ctx context.Context, id uuid.UUID, role str
 	}
 	return nil
 }
+
+func (u *UserService) UpdateUserInfo(ctx context.Context, id uuid.UUID, data dto.UpdateUserDto) error {
+	if data.FirstName == "" && data.LastName == "" && data.Dni == "" && data.Phone == "" && data.BirthDate == "" {
+		return errors.New("no data to update")
+	}
+	logger.GetContextLogger(ctx).Infof("updating user %s", id)
+
+	user, err := u.UserRepo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNoUserWithID
+		}
+		return err
+	}
+
+	if data.FirstName != "" {
+		user.FirstName = data.FirstName
+	}
+	if data.LastName != "" {
+		user.LastName = data.LastName
+	}
+	if data.Dni != "" {
+		user.DNI = data.Dni
+	}
+	if data.Phone != "" {
+		user.Phone = data.Phone
+	}
+
+	return u.UserRepo.Update(user)
+}

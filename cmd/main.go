@@ -17,6 +17,10 @@ import (
 // @title VitaCare API
 // @version 0.0
 // @description This the service of Vitacare.
+//@securityDefinitions.apikey Token
+//@in header
+//@name Authorization
+
 func main() {
 	logs := logger.GetGlobalLogger()
 	defer logger.CloseLogger()

@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v0/user/auth/login": {
+        "/api/v0/users/auth/login": {
             "post": {
                 "description": "login a user and set a cookie with the refresh token",
                 "tags": [
@@ -43,7 +43,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v0/user/auth/logout": {
+        "/api/v0/users/auth/logout": {
             "put": {
                 "description": "logout a user and delete the refresh token",
                 "tags": [
@@ -60,7 +60,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v0/user/auth/register": {
+        "/api/v0/users/auth/register": {
             "post": {
                 "description": "Register a new user in the system",
                 "tags": [
@@ -88,7 +88,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v0/user/auth/renew": {
+        "/api/v0/users/auth/renew": {
             "post": {
                 "description": "renew access token with refresh token",
                 "tags": [
@@ -111,6 +111,40 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.UserDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v0/users/{id}/role": {
+            "patch": {
+                "security": [
+                    {
+                        "\u003cYourTypeOfKey\u003e": []
+                    },
+                    {
+                        "Token": []
+                    }
+                ],
+                "description": "An admin can update the role of a user",
+                "tags": [
+                    "users"
+                ],
+                "summary": "update user role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -202,6 +236,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "Token": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

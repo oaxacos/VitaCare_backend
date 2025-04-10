@@ -58,7 +58,7 @@ func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *to
 	})
 }
 
-// @Router /api/v0/user/auth/register [post]
+// @Router /api/v0/users/auth/register [post]
 // @Summary Register a new user
 // @Description Register a new user in the system
 // @Tags users
@@ -111,7 +111,7 @@ func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Reque
 	response.RenderJson(w, dataResponse, http.StatusCreated)
 }
 
-// @Router /api/v0/user/auth/login [post]
+// @Router /api/v0/users/auth/login [post]
 // @Summary login a user
 // @Description login a user and set a cookie with the refresh token
 // @Tags users
@@ -155,7 +155,7 @@ func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
 	response.WriteJsonResponse(w, dataResponse, http.StatusOK)
 }
 
-// @Router /api/v0/user/auth/renew [post]
+// @Router /api/v0/users/auth/renew [post]
 // @Summary renew access token
 // @Description renew access token with refresh token
 // @Tags users
@@ -215,7 +215,7 @@ func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request
 	response.WriteJsonResponse(w, resp, http.StatusOK)
 }
 
-// @Router /api/v0/user/auth/logout [put]
+// @Router /api/v0/users/auth/logout [put]
 // @Summary logout a user
 // @Description logout a user and delete the refresh token
 // @Tags users
@@ -238,11 +238,14 @@ func (u *UserController) handleLogout(w http.ResponseWriter, r *http.Request) {
 	response.RenderJson(w, response.Envelop("message", "success"), http.StatusOK)
 }
 
-// @Summary Update user role
-// @Description Update user role
+// @Router /api/v0/users/{id}/role [patch]
+// @Summary update user role
+// @Security <YourTypeOfKey>
+// @Description An admin can update the role of a user
 // @Tags users
-// @Accept json
-// @Produce json
+// @Security Token
+// @Param id path string true "User ID"
+// @Success 200 {object} string
 func (u *UserController) handleUpdateUserRole(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	// claims := utils.GetClaimsFromContext(ctx)

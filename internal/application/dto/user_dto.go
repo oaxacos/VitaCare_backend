@@ -33,3 +33,11 @@ type User struct {
 type UpdateUserRoleDto struct {
 	Role string `json:"role" validate:"required,oneof=admin doctor patient secretary"`
 }
+
+type UpdateUserDto struct {
+	FirstName string `json:"first_name" validate:"omitempty,min=3"`
+	LastName  string `json:"last_name" validate:"omitempty,min=3"`
+	Dni       string `json:"dni" validate:"omitempty,min=3"`
+	Phone     string `json:"phone" validate:"omitempty,min=3"`
+	BirthDate string `json:"birth_date" validate:"omitempty,min=3"` // YYYY-MM-DD
+}

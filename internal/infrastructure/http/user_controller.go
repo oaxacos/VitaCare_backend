@@ -54,6 +54,7 @@ func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *to
 		r.Group(func(r chi.Router) {
 			r.Use(middlewares.AuthMiddleware(s.Config), middlewares.AdminMiddleware(s.Config))
 			r.Patch("/{id}/role", userController.handleUpdateUserRole)
+			r.Patch("/", userController.handleUpdateUser)
 		})
 	})
 }
@@ -275,4 +276,58 @@ func (u *UserController) handleUpdateUserRole(w http.ResponseWriter, r *http.Req
 
 	response.RenderJson(w, resp, http.StatusOK)
 
+}
+
+// @Router /api/v0/users/ [path]
+// @Summary update user profile
+// @Security <YourTypeOfKey>
+// @Description Any user can update his profile, first name, last name, dni, phone and birthdate are fields that can be updated, can update all fields o just some of them
+// @Tags users
+// @Security Token
+// @Success 200 {object} string
+
+func (u *UserController) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
+	claims := utils.GetClaimsFromContext(r.Context())
+
+	if claims == nil {
+		response.RenderUnauthorized(w)
+		return
+	}
+
+	userID := claims.UserID
+
+	if userID == uuid.Nil {
+		response.RenderUnauthorized(w)
+		return
+	}
+
+	var updateUser dto.UpdateUserDto
+	err := utils.ReadFromRequest(r, &updateUser)
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	validator.NewValidator()
+
+	err = validator.Validate(updateUser)
+	if err != nil {
+		response.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	isEmpty := utils.IsEmptyStruct[dto.UpdateUserDto](updateUser)
+	if isEmpty {
+		response.RenderError(w, http.StatusBadRequest, "empty request body, at least one field is required")
+		return
+	}
+
+	err = u.userService.UpdateUserInfo(r.Context(), userID, updateUser)
+
+	if err != nil {
+		response.RenderFatalError(w, err)
+		return
+	}
+
+	resp := response.Envelop("user", updateUser)
+	response.WriteJsonResponse(w, resp, http.StatusOK)
 }

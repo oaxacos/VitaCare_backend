@@ -15,6 +15,42 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v0/users/": {
+            "patch": {
+                "security": [
+                    {
+                        "\u003cYourTypeOfKey\u003e": []
+                    },
+                    {
+                        "Token": []
+                    }
+                ],
+                "description": "Any user can update his profile, first name, last name, dni, phone and birthdate",
+                "tags": [
+                    "users"
+                ],
+                "summary": "update user profile",
+                "parameters": [
+                    {
+                        "description": "User data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateUserDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v0/users/auth/login": {
             "post": {
                 "description": "login a user and set a cookie with the refresh token",
@@ -157,6 +193,32 @@ const docTemplate = `{
             "properties": {
                 "refresh_token": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.UpdateUserDto": {
+            "type": "object",
+            "properties": {
+                "birth_date": {
+                    "description": "YYYY-MM-DD",
+                    "type": "string",
+                    "minLength": 3
+                },
+                "dni": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "first_name": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "last_name": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "phone": {
+                    "type": "string",
+                    "minLength": 3
                 }
             }
         },

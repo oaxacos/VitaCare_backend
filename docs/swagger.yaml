@@ -4,6 +4,25 @@ definitions:
       refresh_token:
         type: string
     type: object
+  dto.UpdateUserDto:
+    properties:
+      birth_date:
+        description: YYYY-MM-DD
+        minLength: 3
+        type: string
+      dni:
+        minLength: 3
+        type: string
+      first_name:
+        minLength: 3
+        type: string
+      last_name:
+        minLength: 3
+        type: string
+      phone:
+        minLength: 3
+        type: string
+    type: object
   dto.User:
     properties:
       email:
@@ -63,6 +82,28 @@ info:
   title: VitaCare API
   version: "0.0"
 paths:
+  /api/v0/users/:
+    patch:
+      description: Any user can update his profile, first name, last name, dni, phone
+        and birthdate
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserDto'
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - <YourTypeOfKey>: []
+      - Token: []
+      summary: update user profile
+      tags:
+      - users
   /api/v0/users/{id}/role:
     patch:
       description: An admin can update the role of a user

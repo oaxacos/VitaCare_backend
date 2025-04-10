@@ -278,14 +278,14 @@ func (u *UserController) handleUpdateUserRole(w http.ResponseWriter, r *http.Req
 
 }
 
-// @Router /api/v0/users/ [path]
+// @Router /api/v0/users/ [patch]
 // @Summary update user profile
 // @Security <YourTypeOfKey>
-// @Description Any user can update his profile, first name, last name, dni, phone and birthdate are fields that can be updated, can update all fields o just some of them
+// @Description Any user can update his profile, first name, last name, dni, phone and birthdate
 // @Tags users
 // @Security Token
 // @Success 200 {object} string
-
+// @Param user body dto.UpdateUserDto true "User data"
 func (u *UserController) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	claims := utils.GetClaimsFromContext(r.Context())
 

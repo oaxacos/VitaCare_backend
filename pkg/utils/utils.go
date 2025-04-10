@@ -9,6 +9,7 @@ import (
 var (
 	ErrorBodyReadAfterClose = errors.New("request body closed")
 	ErrorEmptyRequestBody   = errors.New("empty request body")
+	ErrorInvalidBodyRequest = errors.New("invalid request body")
 )
 
 func ReadFromRequest(r *http.Request, data any) error {
@@ -22,6 +23,10 @@ func ReadFromRequest(r *http.Request, data any) error {
 		if errors.Is(err, http.ErrBodyReadAfterClose) {
 			return ErrorBodyReadAfterClose
 		}
+		if _, ok := err.(*json.SyntaxError); ok {
+			return ErrorInvalidBodyRequest
+		}
+
 		if err.Error() == "EOF" {
 			return ErrorEmptyRequestBody
 		}

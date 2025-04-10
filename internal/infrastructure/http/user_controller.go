@@ -25,16 +25,18 @@ type UserController struct {
 	tokenService *token.TokenSvc
 	c            *chi.Mux
 	Config       *config.Config
+	validator    *validator.Validator
 }
 
 const prefix = "/api/v0/users"
 
-func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *token.TokenSvc) {
+func NewUserController(s *server.Server, userSvc *user.UserService, tokenSvc *token.TokenSvc, validator *validator.Validator) {
 	userController := &UserController{
 		c:            s.Mux,
 		Config:       s.Config,
 		userService:  userSvc,
 		tokenService: tokenSvc,
+		validator:    validator,
 	}
 
 	userController.c.Route(prefix, func(r chi.Router) {
@@ -74,9 +76,8 @@ func (u *UserController) handleRegisterUser(w http.ResponseWriter, r *http.Reque
 		response.RenderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	validator.NewValidator()
 
-	err = validator.Validate(userData)
+	err = u.validator.ValidateStruct(userData)
 	if err != nil {
 		response.RenderError(w, http.StatusBadRequest, err.Error())
 		return
@@ -125,8 +126,7 @@ func (u *UserController) handleLogin(w http.ResponseWriter, r *http.Request) {
 		response.RenderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	validator.NewValidator()
-	err = validator.Validate(loginData)
+	err = u.validator.ValidateStruct(loginData)
 	if err != nil {
 		response.RenderError(w, http.StatusBadRequest, err.Error())
 		return
@@ -172,8 +172,7 @@ func (u *UserController) handleRenewToken(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	validator.NewValidator()
-	err = validator.Validate(refreshToken)
+	err = u.validator.ValidateStruct(refreshToken)
 	if err != nil {
 		response.RenderError(w, http.StatusBadRequest, err.Error())
 		return
@@ -307,9 +306,8 @@ func (u *UserController) handleUpdateUser(w http.ResponseWriter, r *http.Request
 		response.RenderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	validator.NewValidator()
 
-	err = validator.Validate(updateUser)
+	err = u.validator.ValidateStruct(updateUser)
 	if err != nil {
 		response.RenderError(w, http.StatusBadRequest, err.Error())
 		return

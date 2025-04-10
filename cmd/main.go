@@ -12,6 +12,7 @@ import (
 	"github.com/oaxacos/vitacare/internal/infrastructure/http"
 	"github.com/oaxacos/vitacare/pkg/logger"
 	"github.com/oaxacos/vitacare/pkg/server"
+	"github.com/oaxacos/vitacare/pkg/validator"
 )
 
 // @title VitaCare API
@@ -44,13 +45,14 @@ func main() {
 	passRepo := password.NewPasswordRepository(dbRepo)
 	userRepo := userRepository.NewUserRepository(dbRepo)
 	tokenRepo := tokenRepository.NewTokenRepository(dbRepo)
+	validation := validator.New()
 
 	userSvc := user.NewUserService(userRepo, passRepo)
 	tokenSvc := token.NewTokenService(conf, tokenRepo)
 
 	s := server.NewServer(conf)
 
-	http.NewUserController(s, userSvc, tokenSvc)
+	http.NewUserController(s, userSvc, tokenSvc, validation)
 
 	err = s.Start()
 	if err != nil {

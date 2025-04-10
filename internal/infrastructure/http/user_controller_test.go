@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/oaxacos/vitacare/internal/config"
 	"github.com/oaxacos/vitacare/internal/domain/repository/password"
 	tokenRepository "github.com/oaxacos/vitacare/internal/domain/repository/token"
@@ -14,10 +18,8 @@ import (
 	"github.com/oaxacos/vitacare/pkg/logger"
 	"github.com/oaxacos/vitacare/pkg/server"
 	"github.com/oaxacos/vitacare/pkg/utils"
+	"github.com/oaxacos/vitacare/pkg/validator"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestUserController(t *testing.T) {
@@ -39,8 +41,9 @@ func TestUserController(t *testing.T) {
 	tokenSvc := token.NewTokenService(configTest, tokenRepo)
 
 	s := server.NewServer(configTest)
+	vali := validator.New()
 
-	NewUserController(s, userService, tokenSvc)
+	NewUserController(s, userService, tokenSvc, vali)
 
 	t.Run("login a user", func(t *testing.T) {
 		data := map[string]interface{}{

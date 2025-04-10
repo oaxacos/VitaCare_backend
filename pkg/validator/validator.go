@@ -11,6 +11,23 @@ import (
 var Validator *validator.Validate
 var PrettyError string
 
+func AtLeastOneFieldRequired(fl validator.FieldLevel) bool {
+	// Check the parent struct value
+	parent := fl.Parent()
+
+	// Loop through all the fields in the struct
+	for i := 0; i < parent.NumField(); i++ {
+		field := parent.Field(i)
+		// If the field is not zero, return true
+		if !reflect.DeepEqual(field.Interface(), reflect.Zero(field.Type()).Interface()) {
+			return true
+		}
+	}
+
+	// If no non-zero field is found, return false
+	return false
+}
+
 func NewValidator() {
 	Validator = validator.New(validator.WithRequiredStructEnabled())
 

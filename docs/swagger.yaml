@@ -63,7 +63,27 @@ info:
   title: VitaCare API
   version: "0.0"
 paths:
-  /api/v0/user/auth/login:
+  /api/v0/users/{id}/role:
+    patch:
+      description: An admin can update the role of a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - <YourTypeOfKey>: []
+      - Token: []
+      summary: update user role
+      tags:
+      - users
+  /api/v0/users/auth/login:
     post:
       description: login a user and set a cookie with the refresh token
       parameters:
@@ -81,7 +101,7 @@ paths:
       summary: login a user
       tags:
       - users
-  /api/v0/user/auth/logout:
+  /api/v0/users/auth/logout:
     put:
       description: logout a user and delete the refresh token
       responses:
@@ -92,7 +112,7 @@ paths:
       summary: logout a user
       tags:
       - users
-  /api/v0/user/auth/register:
+  /api/v0/users/auth/register:
     post:
       description: Register a new user in the system
       parameters:
@@ -110,7 +130,7 @@ paths:
       summary: Register a new user
       tags:
       - users
-  /api/v0/user/auth/renew:
+  /api/v0/users/auth/renew:
     post:
       description: renew access token with refresh token
       parameters:
@@ -128,4 +148,9 @@ paths:
       summary: renew access token
       tags:
       - users
+securityDefinitions:
+  Token:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -8,12 +8,16 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-var Validator *validator.Validate
+type Validator struct {
+	*validator.Validate
+}
 
-func NewValidator() {
-	Validator = validator.New(validator.WithRequiredStructEnabled())
+var Val *validator.Validate
 
-	Validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
+func New() *Validator {
+	Val = validator.New(validator.WithRequiredStructEnabled())
+
+	Val.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
 		if name == "-" {
 			return ""
@@ -21,12 +25,14 @@ func NewValidator() {
 
 		return name
 	})
+	return &Validator{
+		Validate: Val,
+	}
 
 }
 
-func Validate(data interface{}) error {
-
-	err := Validator.Struct(data)
+func (v *Validator) ValidateStruct(data any) error {
+	err := Val.Struct(data)
 	if err != nil {
 		if validationErr, ok := err.(validator.ValidationErrors); ok {
 			firstError := validationErr[0]
